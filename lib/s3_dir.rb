@@ -63,7 +63,8 @@ module S3Dir
     bucket = storage.directories.get(key)
     bucket ||= storage.directories.create(key: key, public: is_public)
 
-    Dir.chdir(files_path) do                                                                     Dir['**/*'].each do |entry|
+    Dir.chdir(files_path) do
+      Dir['**/*'].each do |entry|
         if File.directory?(entry)
           bucket.files.create(key: entry, public: is_public)
         else
