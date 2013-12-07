@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["nx@nu-ex.com"]
   spec.description   = %q{Upload a directory to AWS S3}
   spec.summary       = %q{Uploads a directory of files to an AWS S3 bucket}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/nuex/s3_dir"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
