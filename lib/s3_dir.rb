@@ -78,13 +78,25 @@ module S3Dir
     def upload
       Dir.chdir(files_path) do
         Dir['**/*'].each do |entry|
-          if File.directory?(entry)
-            bucket.files.create(key: entry, public: is_public)
-          else
-            bucket.files.create(key: entry, public: is_public, body: File.open(entry))
-          end
+          File.directory?(entry) ? create_directory(entry) : create_file(entry)
         end
       end
+    end
+
+    private
+
+    def create_directory entry
+      bucket.files.create(key: entry, public: is_public)
+    end
+
+    def create_file entry
+      storage.head_object(key, entry, {'If-None-Match' => md5(entry)})
+    rescue Excon::Errors::NotFound
+      bucket.files.create(key: entry, public: is_public, body: File.open(entry))
+    end
+
+    def md5 entry
+      Digest::MD5.digest(entry)
     end
   end
 end
