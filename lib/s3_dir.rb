@@ -34,15 +34,11 @@ module S3Dir
     settings = {credential: ENV['FOG_CREDENTIAL'],
                 private: false}.merge(options)
 
-    # We have to manually extract fog credentials here
-    # because we'll need those settings when creating a new
-    # Fog::Storage object with custom settings
-    all_credentials = YAML::load_file(File.join(ENV['HOME'], '.fog'))
-    credential = settings[:credential]
-    credentials = all_credentials[credential]
-    access_key = credentials[:aws_access_key_id]
-    secret_key = credentials[:aws_secret_access_key]
-    region = credentials[:region] || 'us-west-2'
+    # Configure Fog
+    Fog.credential = settings[:credential]
+
+    # Get a region
+    region = Fog.credentials[:region] || 'us-west-2'
 
     # If we don't specify this endpoint, Fog will complain about
     # not using the correct endpoint if the bucket has dots in
@@ -56,10 +52,10 @@ module S3Dir
     # We have to specify path_style here because Fog will complain about
     # our website bucket (if we're using a bucket with dots in the name)
     # not being covered by the SSL certificate.
-    storage = Fog::Storage.new(provider: 'aws', aws_access_key_id: access_key,
-                               aws_secret_access_key: secret_key,
-                               path_style: true, region: region,
-                               endpoint: endpoint)
+    fog_options = Fog.credentials.merge({provider: 'aws', path_style: true,
+                                         region: region, endpoint: endpoint})
+    fog_options.delete(:key_name)
+    storage = Fog::Storage.new(fog_options)
     bucket = storage.directories.get(key)
     bucket ||= storage.directories.create(key: key, public: is_public)
 
