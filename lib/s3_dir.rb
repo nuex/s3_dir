@@ -86,17 +86,19 @@ module S3Dir
     private
 
     def create_directory entry
+      storage.head_object(key, entry)
+    rescue Excon::Errors::NotFound
       bucket.files.create(key: entry, public: is_public)
     end
 
     def create_file entry
-      storage.head_object(key, entry, {'If-None-Match' => md5(entry)})
-    rescue Excon::Errors::NotFound
+      storage.head_object(key, entry, {'If-Match' => md5(entry)})
+    rescue Excon::Errors::PreconditionFailed, Excon::Errors::NotFound
       bucket.files.create(key: entry, public: is_public, body: File.open(entry))
     end
 
     def md5 entry
-      Digest::MD5.digest(entry)
+      Digest::MD5.hexdigest(File.read(entry))
     end
   end
 end
